@@ -1,0 +1,7 @@
+{
+  "name": "triple-pendulum-lab",
+  "version": "1.0.0",
+  "description": "A Double DQN (with DQfD seeding) learning to balance a triple inverted pendulum on a cart, in one HTML file.",
+  "private": true,
+  "scripts": { "build": "node build.js", "test": "node test/physics.test.js && node test/expert.test.js && node test/training.test.js" }
+}
