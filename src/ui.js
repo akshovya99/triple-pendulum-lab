@@ -7,11 +7,12 @@
   const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   const C = {
-    bg: '#0c1117', panel: '#121a23', line: '#243140', grid: '#1b2631', text: '#d5dde8', muted: '#8494a8',
-    amber: '#f2b24a', teal: '#38d0c0', mag: '#e66fb8', ice: '#9fc2ff', warm: '#ffd98a'
+    bg: '#000000', panel: '#0a0a0a', line: '#2a2a2a', grid: '#141414', text: '#e6e6e6', muted: '#8a8a8a',
+    l1: '#ffffff', l2: '#b0b0b0', l3: '#707070', ink: '#ffffff', soft: '#cfcfcf'
   };
-  const LINK_COLORS = [C.amber, C.teal, C.mag];
-  const FONT = "'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  const LINK_COLORS = [C.l1, C.l2, C.l3];
+  const LINK_DASH = [[], [5, 3], [1.5, 2.5]];     // greyscale: links are also told apart by line style
+  const FONT = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
 
   /* ---------- model instances ---------- */
   const P = Object.assign({}, DEFAULTS);
@@ -48,12 +49,12 @@
   const PHYS = [
     { k: 'g', label: 'Gravity', unit: ' m/s²', min: 1, max: 20, step: 0.01, d: 2 },
     { k: 'mc', label: 'Cart mass', unit: ' kg', min: 0.2, max: 5, step: 0.05, d: 2 },
-    { k: 'L1', label: 'Link 1 length', unit: ' m', min: 0.15, max: 0.8, step: 0.01, d: 2, c: C.amber },
-    { k: 'L2', label: 'Link 2 length', unit: ' m', min: 0.15, max: 0.8, step: 0.01, d: 2, c: C.teal },
-    { k: 'L3', label: 'Link 3 length', unit: ' m', min: 0.15, max: 0.8, step: 0.01, d: 2, c: C.mag },
-    { k: 'm1', label: 'Link 1 mass', unit: ' kg', min: 0.05, max: 1, step: 0.01, d: 2, c: C.amber },
-    { k: 'm2', label: 'Link 2 mass', unit: ' kg', min: 0.05, max: 1, step: 0.01, d: 2, c: C.teal },
-    { k: 'm3', label: 'Link 3 mass', unit: ' kg', min: 0.05, max: 1, step: 0.01, d: 2, c: C.mag },
+    { k: 'L1', label: 'Link 1 length', unit: ' m', min: 0.15, max: 0.8, step: 0.01, d: 2, c: C.l1 },
+    { k: 'L2', label: 'Link 2 length', unit: ' m', min: 0.15, max: 0.8, step: 0.01, d: 2, c: C.l2 },
+    { k: 'L3', label: 'Link 3 length', unit: ' m', min: 0.15, max: 0.8, step: 0.01, d: 2, c: C.l3 },
+    { k: 'm1', label: 'Link 1 mass', unit: ' kg', min: 0.05, max: 1, step: 0.01, d: 2, c: C.l1 },
+    { k: 'm2', label: 'Link 2 mass', unit: ' kg', min: 0.05, max: 1, step: 0.01, d: 2, c: C.l2 },
+    { k: 'm3', label: 'Link 3 mass', unit: ' kg', min: 0.05, max: 1, step: 0.01, d: 2, c: C.l3 },
     { k: 'cf', label: 'Cart friction', unit: ' N·s/m', min: 0, max: 2, step: 0.01, d: 2 },
     { k: 'jd', label: 'Joint damping', unit: ' N·m·s/rad', min: 0, max: 0.05, step: 0.001, d: 3 },
     { k: 'fmax', label: 'Force limit', unit: ' N', min: 5, max: 80, step: 1, d: 0 }
@@ -93,8 +94,8 @@
   /* ---------- readout ---------- */
   const RO = [
     ['x', 'Cart x', 'm'], ['xd', 'Cart ẋ', 'm/s'], ['u', 'Control u', 'N'],
-    ['t1', 'θ1', '°', C.amber], ['t2', 'θ2', '°', C.teal], ['t3', 'θ3', '°', C.mag],
-    ['w1', 'ω1', '°/s', C.amber], ['w2', 'ω2', '°/s', C.teal], ['w3', 'ω3', '°/s', C.mag],
+    ['t1', 'θ1', '°', C.l1], ['t2', 'θ2', '°', C.l2], ['t3', 'θ3', '°', C.l3],
+    ['w1', 'ω1', '°/s', C.l1], ['w2', 'ω2', '°/s', C.l2], ['w3', 'ω3', '°/s', C.l3],
     ['st', 'Upright streak', 's'], ['best', 'Best streak', 's']
   ];
   const roHost = $('readout'); const roEls = {};
@@ -217,12 +218,12 @@
     g.stroke();
 
     // upright reference line through the pivot
-    g.save(); g.setLineDash([2, 6]); g.strokeStyle = '#2c3d4f'; g.beginPath(); g.moveTo(X(s[0]), pivotY); g.lineTo(X(s[0]), Math.max(10, pivotY - (L[0] + L[1] + L[2] + 0.1) * ppm)); g.stroke(); g.restore();
+    g.save(); g.setLineDash([2, 6]); g.strokeStyle = '#333333'; g.beginPath(); g.moveTo(X(s[0]), pivotY); g.lineTo(X(s[0]), Math.max(10, pivotY - (L[0] + L[1] + L[2] + 0.1) * ppm)); g.stroke(); g.restore();
 
     // rail + ruler
     const railL = X(-TRACK - 0.62), railR = X(TRACK + 0.62);
-    g.fillStyle = '#1c2835'; rrect(g, railL, trackY, railR - railL, 6, 3); g.fill();
-    g.strokeStyle = '#4a6076'; g.fillStyle = C.muted; g.font = '11px ' + FONT; g.textAlign = 'center'; g.lineWidth = 1;
+    g.fillStyle = '#1a1a1a'; rrect(g, railL, trackY, railR - railL, 6, 0); g.fill();
+    g.strokeStyle = '#555555'; g.fillStyle = C.muted; g.font = '11px ' + FONT; g.textAlign = 'center'; g.lineWidth = 1;
     for (let i = -24; i <= 24; i++) {
       const x = Math.round(X(i * 0.1)) + 0.5, major = i % 10 === 0, mid = i % 5 === 0;
       g.beginPath(); g.moveTo(x, trackY + 8); g.lineTo(x, trackY + 8 + (major ? 11 : (mid ? 8 : 4))); g.stroke();
@@ -235,20 +236,18 @@
     for (const sd of [-1, 1]) {
       const face = X(sd * (TRACK + 0.2)), bw = 0.12 * ppm, bh = 0.2 * ppm;
       const x0 = sd < 0 ? face - bw : face;
-      g.fillStyle = '#26364a'; rrect(g, x0, trackY - bh + 6, bw, bh, 3); g.fill();
+      g.fillStyle = '#1f1f1f'; rrect(g, x0, trackY - bh + 6, bw, bh, 0); g.fill();
       const hit = sd < 0 ? touchL : touchR;
-      g.fillStyle = hit ? C.amber : '#4f7a86';
+      g.fillStyle = hit ? C.ink : '#555555';
       const pw = Math.max(3, bw * 0.38);
-      rrect(g, sd < 0 ? face - pw : face, trackY - bh + 9, pw, bh - 6, 2); g.fill();
+      rrect(g, sd < 0 ? face - pw : face, trackY - bh + 9, pw, bh - 6, 0); g.fill();
     }
 
     // cart
     const cartW = 0.4 * ppm, cartH = 0.12 * ppm, cxp = X(s[0]);
-    const grad = g.createLinearGradient(0, pivotY, 0, pivotY + cartH);
-    grad.addColorStop(0, '#34495e'); grad.addColorStop(1, '#22313f');
-    g.fillStyle = grad; g.strokeStyle = '#5b738a'; g.lineWidth = 1.2;
-    rrect(g, cxp - cartW / 2, pivotY, cartW, cartH, 4); g.fill(); g.stroke();
-    g.fillStyle = '#16202a'; g.strokeStyle = '#5b738a';
+    g.fillStyle = '#161616'; g.strokeStyle = '#6a6a6a'; g.lineWidth = 1.2;
+    rrect(g, cxp - cartW / 2, pivotY, cartW, cartH, 0); g.fill(); g.stroke();
+    g.fillStyle = '#0a0a0a'; g.strokeStyle = '#6a6a6a';
     for (const sd of [-1, 1]) { g.beginPath(); g.arc(cxp + sd * 0.12 * ppm, trackY - 0.035 * ppm, 0.035 * ppm, 0, 6.2832); g.fill(); g.stroke(); }
 
     // links
@@ -260,7 +259,7 @@
       const tr = live.trail, n = tr.length / 2;
       g.lineCap = 'round'; g.lineWidth = 2;
       for (let k = 1; k < n; k++) {
-        g.strokeStyle = 'rgba(230,111,184,' + (0.55 * k / n).toFixed(3) + ')';
+        g.strokeStyle = 'rgba(200,200,200,' + (0.55 * k / n).toFixed(3) + ')';
         g.beginPath(); g.moveTo(X(tr[2 * k - 2]), Y(tr[2 * k - 1])); g.lineTo(X(tr[2 * k]), Y(tr[2 * k + 1])); g.stroke();
       }
     }
@@ -272,7 +271,7 @@
       g.strokeStyle = LINK_COLORS[i]; g.lineWidth = lw; g.beginPath(); g.moveTo(X(a[0]), Y(a[1])); g.lineTo(X(b[0]), Y(b[1])); g.stroke();
     }
     for (let i = 0; i < 4; i++) {
-      g.fillStyle = C.bg; g.strokeStyle = i === 0 ? '#8aa0b6' : LINK_COLORS[i - 1]; g.lineWidth = 2;
+      g.fillStyle = C.bg; g.strokeStyle = i === 0 ? '#9a9a9a' : LINK_COLORS[i - 1]; g.lineWidth = 2;
       g.beginPath(); g.arc(X(pts[i][0]), Y(pts[i][1]), i === 3 ? 4 : 4.5, 0, 6.2832); g.fill(); g.stroke();
     }
 
@@ -280,23 +279,23 @@
     const u = live.uS, ay = pivotY + cartH / 2;
     const alen = clampN(u / P.fmax, -1, 1) * 1.0 * ppm, dirn = u >= 0 ? 1 : -1;
     const sx = cxp + dirn * cartW / 2;
-    if (Math.abs(alen) > 2) arrow(g, sx, ay, sx + alen, ay, C.ice, 3);
-    g.fillStyle = C.ice; g.font = '500 12px ' + FONT; g.textAlign = dirn > 0 ? 'left' : 'right';
+    if (Math.abs(alen) > 2) arrow(g, sx, ay, sx + alen, ay, C.ink, 3);
+    g.fillStyle = C.ink; g.font = '500 12px ' + FONT; g.textAlign = dirn > 0 ? 'left' : 'right';
     g.fillText('u = ' + sgn(u, 1) + ' N', sx + alen + dirn * 8, ay + 4);
 
     // drag rubber band + force arrow
     const d = live.drag;
     if (d.active) {
       const gx = X(d.px), gy = d.kind === 'cart' ? pivotY + cartH / 2 : Y(d.py), tx = X(d.tx), ty = Y(d.ty);
-      g.save(); g.setLineDash([6, 5]); g.strokeStyle = '#e8eef6'; g.globalAlpha = 0.85; g.lineWidth = 1.5;
+      g.save(); g.setLineDash([6, 5]); g.strokeStyle = '#e6e6e6'; g.globalAlpha = 0.85; g.lineWidth = 1.5;
       g.beginPath(); g.moveTo(gx, gy); g.lineTo(tx, ty); g.stroke(); g.restore();
-      g.strokeStyle = '#e8eef6'; g.lineWidth = 1.5; g.beginPath(); g.arc(tx, ty, 6, 0, 6.2832); g.stroke();
-      g.fillStyle = '#e8eef6'; g.beginPath(); g.arc(gx, gy, 3, 0, 6.2832); g.fill();
+      g.strokeStyle = '#e6e6e6'; g.lineWidth = 1.5; g.beginPath(); g.arc(tx, ty, 6, 0, 6.2832); g.stroke();
+      g.fillStyle = '#e6e6e6'; g.beginPath(); g.arc(gx, gy, 3, 0, 6.2832); g.fill();
       const fm = Math.hypot(d.fx, d.fy), cap = d.kind === 'cart' ? 30 : 10;
       if (fm > 0.2) {
         const k = Math.min(1, fm / cap) * 0.7 * ppm;
-        arrow(g, gx, gy, gx + d.fx / fm * k, gy - d.fy / fm * k, C.warm, 3);
-        g.fillStyle = C.warm; g.font = '500 12px ' + FONT; g.textAlign = 'left';
+        arrow(g, gx, gy, gx + d.fx / fm * k, gy - d.fy / fm * k, C.soft, 3);
+        g.fillStyle = C.soft; g.font = '500 12px ' + FONT; g.textAlign = 'left';
         g.fillText('F = ' + fm.toFixed(1) + ' N', gx + d.fx / fm * k + 8, gy - d.fy / fm * k - 6);
       }
     }
@@ -304,8 +303,8 @@
     // HUD
     g.textAlign = 'left'; g.font = '500 12px ' + FONT;
     let msg, col = C.muted;
-    if (state.paused) { msg = 'Paused'; col = C.ice; }
-    else if (live.failed) { msg = 'Fell. Restarting…'; col = C.amber; }
+    if (state.paused) { msg = 'Paused'; col = C.ink; }
+    else if (live.failed) { msg = 'Fell. Restarting…'; col = C.ink; }
     else if (live.agentOn) msg = 'Greedy agent, live';
     else msg = 'Agent off: passive pendulum';
     g.fillStyle = col; g.fillText(msg, 14, 22);
@@ -325,8 +324,8 @@
     for (let i = spec.legend.length - 1; i >= 0; i--) {
       const l = spec.legend[i], tw = g.measureText(l.label).width;
       g.fillStyle = C.muted; g.fillText(l.label, lx, 17);
-      g.fillStyle = l.color; g.fillRect(lx - tw - 14, 12, 9, 3);
-      lx -= tw + 24;
+      g.save(); g.strokeStyle = l.color; g.lineWidth = 2; g.setLineDash(l.dash || []); g.beginPath(); g.moveTo(lx - tw - 18, 13.5); g.lineTo(lx - tw - 5, 13.5); g.stroke(); g.restore();
+      lx -= tw + 28;
     }
     const y2 = (v) => padT + ih * (1 - (v - spec.yMin) / (spec.yMax - spec.yMin));
     g.lineWidth = 1; g.textAlign = 'right'; g.font = '11px ' + FONT;
@@ -346,12 +345,12 @@
     g.save(); g.beginPath(); g.rect(padL, padT - 2, iw, ih + 4); g.clip();
     for (const sr of spec.series) {
       const n = sr.n, tot = Math.max(2, spec.xCount || n);
-      g.strokeStyle = sr.color; g.lineWidth = sr.width || 1.5; g.globalAlpha = sr.alpha || 1; g.lineJoin = 'round'; g.beginPath();
+      g.strokeStyle = sr.color; g.lineWidth = sr.width || 1.5; g.globalAlpha = sr.alpha || 1; g.lineJoin = 'round'; g.setLineDash(sr.dash || []); g.beginPath();
       for (let k = 0; k < n; k++) {
         const x = padL + iw * (tot - n + k) / (tot - 1), v = clampN(sr.ys[k], spec.yMin, spec.yMax), y = y2(v);
         if (k === 0) g.moveTo(x, y); else g.lineTo(x, y);
       }
-      g.stroke(); g.globalAlpha = 1;
+      g.stroke(); g.globalAlpha = 1; g.setLineDash([]);
     }
     g.restore();
   }
@@ -378,9 +377,9 @@
     const yr = niceRange(Math.min(m, 40), [2, 5, 10, 20, 40]);
     drawChart(charts.ang, {
       title: 'Angle errors θ1–θ3', yMin: -yr, yMax: yr, yFmt: (v) => v.toFixed(yr < 5 ? 1 : 0) + '°', xLabels: ['−10 s', 'now'], xCount: 500,
-      legend: [{ label: 'θ1', color: C.amber }, { label: 'θ2', color: C.teal }, { label: 'θ3', color: C.mag }],
-      hlines: [{ y: 0, color: '#3a4d60' }, { y: 34.4, color: C.amber, dash: [4, 4], alpha: 0.5 }, { y: -34.4, color: C.amber, dash: [4, 4], alpha: 0.5 }],
-      series: [0, 1, 2].map((k) => ({ ys: angBuf[k], n, color: LINK_COLORS[k], width: 1.6 })), empty: ''
+      legend: [{ label: 'θ1', color: C.l1, dash: LINK_DASH[0] }, { label: 'θ2', color: C.l2, dash: LINK_DASH[1] }, { label: 'θ3', color: C.l3, dash: LINK_DASH[2] }],
+      hlines: [{ y: 0, color: '#444444' }, { y: 34.4, color: '#777777', dash: [4, 4], alpha: 0.7 }, { y: -34.4, color: '#777777', dash: [4, 4], alpha: 0.7 }],
+      series: [0, 1, 2].map((k) => ({ ys: angBuf[k], n, color: LINK_COLORS[k], width: 1.6, dash: LINK_DASH[k] })), empty: ''
     });
     // reward per episode
     const R = trainer.returns, nn = Math.min(R.length, 300), off = R.length - nn;
@@ -394,14 +393,14 @@
     const nb = niceBounds(Math.min(lo, 0), Math.max(hi, 1));
     drawChart(charts.rew, {
       title: 'Reward per episode', yMin: nb[0], yMax: nb[1], yFmt: (v) => v.toFixed(0), xLabels: [nn ? 'ep ' + (off + 1) : '', nn ? 'ep ' + R.length : ''], xCount: nn,
-      legend: [{ label: 'return', color: '#5a7088' }, { label: '20-episode avg', color: C.teal }], hlines: [{ y: 0, color: '#3a4d60' }],
-      series: nn ? [{ ys, n: nn, color: '#5a7088', width: 1, alpha: 0.9 }, { ys: av, n: nn, color: C.teal, width: 2 }] : [], empty: 'No episodes yet. Press Train.'
+      legend: [{ label: 'return', color: '#5c5c5c' }, { label: '20-episode avg', color: C.ink }], hlines: [{ y: 0, color: '#444444' }],
+      series: nn ? [{ ys, n: nn, color: '#5c5c5c', width: 1, alpha: 0.9 }, { ys: av, n: nn, color: C.ink, width: 2 }] : [], empty: 'No episodes yet. Press Train.'
     });
     // DQN loss (smoothed)
     const lh = trainer.lossHist; let lm = 0; for (let i = 0; i < lh.length; i++) if (lh[i] > lm) lm = lh[i];
     drawChart(charts.loss, {
       title: 'DQN loss (smoothed)', yMin: 0, yMax: lm > 0 ? lm * 1.1 : 1, yFmt: (v) => (v >= 1 ? v.toFixed(1) : v.toFixed(3)), xLabels: ['', 'updates →'], xCount: lh.length,
-      legend: [{ label: 'loss', color: C.amber }], series: lh.length ? [{ ys: lh, n: lh.length, color: C.amber, width: 1.8 }] : [], empty: 'No updates yet.'
+      legend: [{ label: 'loss', color: C.soft }], series: lh.length ? [{ ys: lh, n: lh.length, color: C.soft, width: 1.8 }] : [], empty: 'No updates yet.'
     });
   }
 
